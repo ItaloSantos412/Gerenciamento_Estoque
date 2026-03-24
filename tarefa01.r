@@ -2,7 +2,19 @@ if (!requireNamespace("jsonlite", quietly = TRUE)) {
   install.packages("jsonlite", repos = "https://cloud.r-project.org")
 }
 
-ARQUIVO_JSON <- file.path(dirname(sys.frame(1)$ofile %||% "."), "dados_plantio.json")
+ler_linha <- function(prompt = "") {
+  cat(prompt)
+  linha <- readLines(con = "stdin", n = 1, warn = FALSE)
+  if (length(linha) == 0) return("")
+  trimws(linha)
+}
+
+script_path <- tryCatch({
+  args <- commandArgs(trailingOnly = FALSE)
+  match <- regmatches(args, regexpr("(?<=--file=).+", args, perl = TRUE))
+  if (length(match) > 0) dirname(normalizePath(match[1])) else "."
+}, error = function(e) ".")
+ARQUIVO_JSON <- file.path(script_path, "dados_plantio.json")
 if (!file.exists(ARQUIVO_JSON)) {
   ARQUIVO_JSON <- "dados_plantio.json"
 }
@@ -66,11 +78,11 @@ estatisticas <- function(dados) {
 consultar_clima <- function() {
   cat("Consulta climática via API Open-Meteo (dados atuais).\n")
   cat("Coordenadas padrão: São Paulo (-23.55, -46.63)\n")
-  usar_padrao <- tolower(trimws(readline("Usar coordenadas padrão? (s/n): ")))
+  usar_padrao <- tolower(ler_linha("Usar coordenadas padrão? (s/n): "))
 
   if (usar_padrao == "n") {
-    lat <- as.numeric(readline("Latitude (ex: -23.55): "))
-    lon <- as.numeric(readline("Longitude (ex: -46.63): "))
+    lat <- as.numeric(ler_linha("Latitude (ex: -23.55): "))
+    lon <- as.numeric(ler_linha("Longitude (ex: -46.63): "))
   } else {
     lat <- -23.55
     lon <- -46.63
@@ -136,7 +148,7 @@ dados <- NULL
 
 repeat {
   cat(MENU)
-  escolha <- trimws(readline("Escolha uma opção: "))
+  escolha <- ler_linha("Escolha uma opção: ")
   if (escolha == "5") {
     cat("Saindo do programa.\n")
     break
