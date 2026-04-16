@@ -47,6 +47,32 @@ def salvar_no_banco(conexao, nome, qtd):
     except Exception as e:
         print(f"Erro ao salvar: {e}")
 
+# Salvando os dados no arquivo JSON
+def salvar_json():
+    dados = {
+        "Produtos": lista_produtos,
+        "Quantidades": lista_quantidade
+    }
+    try:
+        with open("estoque.json", "w", encoding="utf-8") as arquivo:
+            json.dump(dados, arquivo, indent=4, ensure_ascii=False)
+    except Exception as e:
+        print(f"Erro ao salvar os dados {e}")
+
+# Carregando os dados do arquivo JSON
+def carregar_json():
+    global lista_produtos, lista_quantidade
+    try:
+        with open("estoque.json", "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+            lista_produtos = dados.get("Produtos", [])
+            lista_quantidade = dados.get("Quantidades", [])
+            print("Dados carregados com sucesso!")
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        print(f"Erro ao carregar os dados: {e}")
+
 #---Orientações---
 
 #Logística: controle de estoque
@@ -65,6 +91,7 @@ def cadastrar(conexao):
     lista_produtos.append(nome)
     lista_quantidade.append(quantidade)
     salvar_no_banco(conexao, nome, quantidade)
+    salvar_json()
     print(f"{nome} registrado no banco de dados!")
     
 def adicionar():
@@ -81,6 +108,7 @@ def adicionar():
                 print("Erro: Digite um valor valido.")
             else:
                 lista_quantidade[indice] += qtd
+                salvar_json()
                 print(f"{nome} adicionado com sucesso. {lista_quantidade[indice]}")               
         except ValueError:
             print('Erro! Digite apenas números')
@@ -102,6 +130,7 @@ def retirar():
                 print(f"Erro: Tem apenas {lista_quantidade[indice]} em estoque.")
             else:           
                 lista_quantidade[indice] -= qtd
+                salvar_json()
                 print(f"Quantidade de {nome} retirada com sucesso.")
         except ValueError:
             print("Valor invalido.")        
@@ -166,7 +195,10 @@ if teste:
     print("Conexão OK!")  
 
 # Chamando o criador de tabela
-criar_tabela(teste)                 
+criar_tabela(teste)    
+
+# Chamando a função para carregar os arquivos salvos
+carregar_json()
 
 # Inicia o menu
 print("===Bem-vindo ao gerenciador de estoques agrônomos===")
