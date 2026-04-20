@@ -47,6 +47,16 @@ def salvar_no_banco(conexao, nome, qtd):
     except Exception as e:
         print(f"Erro ao salvar: {e}")
 
+# Atualizando o banco de dados
+def atualizar_banco_dados(conexao, nome, qtd):
+    try:
+        cursor = conexao.cursor()
+        sql = "UPDATE GS_ESTOQUE_AGRO SET quantidade = :1 WHERE nome_produto = :2"
+        cursor.execute(sql, (qtd, nome))
+        conexao.commit()
+    except Exception as e:
+        print(f"Erro ao atualizar banco de dados {e}")
+
 # Salvando os dados no arquivo JSON
 def salvar_json():
     dados = {
@@ -86,7 +96,10 @@ lista_produtos = list()
 lista_quantidade = list()
 #Funções subalgoritmo:
 def cadastrar(conexao):
-    nome = str(input("Digite o nome do produto: "))
+    nome = str(input("Digite o nome do produto: ")).strip().capitalize()
+    if nome in lista_produtos:
+        print("Erro: Este produto já existe. Use a opção 2 para adicionar quantidade.")
+        return
     quantidade = int(input("Quantidade do produto: "))
     lista_produtos.append(nome)
     lista_quantidade.append(quantidade)
@@ -94,7 +107,7 @@ def cadastrar(conexao):
     salvar_json()
     print(f"{nome} registrado no banco de dados!")
     
-def adicionar():
+def adicionar(conexao):
     if not lista_produtos:
         print("O estoque está vazio.")
         return
@@ -109,12 +122,13 @@ def adicionar():
             else:
                 lista_quantidade[indice] += qtd
                 salvar_json()
+                atualizar_banco_dados(conexao, nome, lista_quantidade[indice])
                 print(f"{nome} adicionado com sucesso. {lista_quantidade[indice]}")               
         except ValueError:
             print('Erro! Digite apenas números')
     else:
         print("Produto inexistente.")
-def retirar():
+def retirar(conexao):
     if not lista_produtos:
         print("O estoque está vazio.")
         return
@@ -131,6 +145,7 @@ def retirar():
             else:           
                 lista_quantidade[indice] -= qtd
                 salvar_json()
+                atualizar_banco_dados(conexao, nome, lista_quantidade[indice])
                 print(f"Quantidade de {nome} retirada com sucesso.")
         except ValueError:
             print("Valor invalido.")        
@@ -175,9 +190,9 @@ def menu(conexao):
             case 1:
                 cadastrar(conexao)
             case 2:
-                adicionar()
+                adicionar(conexao)
             case 3:
-                retirar()
+                retirar(conexao)
             case 4:
                 verificar()
             case 5:
